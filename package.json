@@ -1,8 +1,8 @@
 {
-  "name": "pg-crud",
+  "name": "iri-task",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "kayes",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

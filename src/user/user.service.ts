@@ -1,3 +1,4 @@
+import * as bcrypt from "bcrypt";
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -24,7 +25,7 @@ export class UserService {
   async findAll() {
     try {
       const users = await this.userRepository.find({
-        select: ["id", "userName", "email"],
+        select: ["id", "userName", "email", "profession", "country"],
         order: { id: "DESC" },
       });
       return users;
@@ -59,5 +60,29 @@ export class UserService {
     const { password, ...rest } = await this.userRepository.save(userInfo);
 
     return rest;
+  }
+
+  async remove(id: number) {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    return await this.userRepository.delete(id);
+  }
+
+  async login(userInfo: { email: string; password: string }) {
+    const findInfo = await this.userRepository.findOne({
+      where: { email: userInfo.email },
+    });
+
+    const isMatch = await bcrypt.compare(userInfo.password, findInfo.password);
+
+    if (!isMatch) {
+      return { message: "Password not matched", isLogin: false };
+    } else {
+      true;
+      return { message: "Password  matched", isLogin: true };
+    }
   }
 }
