@@ -1,3 +1,4 @@
+import { UserModule } from "./user/user.module";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
@@ -20,6 +21,7 @@ import { join } from "path";
         synchronize: true,
       }),
     }),
+    UserModule,
   ],
 })
 export class AppModule {}
