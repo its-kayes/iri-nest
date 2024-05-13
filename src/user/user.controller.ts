@@ -8,19 +8,13 @@ import {
   Delete,
   Query,
   Inject,
-  UseInterceptors,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { JwtService } from "@nestjs/jwt";
-import {
-  CACHE_MANAGER,
-  CacheInterceptor,
-  CacheKey,
-  CacheTTL,
-} from "@nestjs/cache-manager";
+import { CACHE_MANAGER, CacheKey, CacheTTL } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
 
 @Controller("user")
