@@ -106,4 +106,10 @@ export class UserController {
   remove(@Param("id") id: string) {
     return this.userService.remove(+id);
   }
+
+  @Get("refresh-token/:id")
+  async refreshToken(@Param("id") id: string) {
+    const token = await this.cacheManager.get(`refresh_token_${id}`);
+    return { refreshToken: token };
+  }
 }

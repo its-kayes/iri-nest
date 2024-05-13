@@ -5,8 +5,7 @@ import { UserService } from "./user.service";
 import { User } from "./entities/user.entity";
 import { JwtModule } from "@nestjs/jwt";
 import { jwtConstants } from "./user.constance";
-import { CacheInterceptor, CacheModule } from "@nestjs/cache-manager";
-import { APP_INTERCEPTOR } from "@nestjs/core";
+import { CacheModule } from "@nestjs/cache-manager";
 import { redisStore } from "cache-manager-redis-store";
 
 @Module({
