@@ -24,7 +24,6 @@ import {
 import { Cache } from "cache-manager";
 
 @Controller("user")
-// @UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(
     private readonly userService: UserService,
@@ -59,19 +58,35 @@ export class UserController {
         userInfo: result.findInfo,
       };
 
+      const access_token = await this.jwtService.signAsync(payload);
+
+      await this.cacheManager.set(
+        `access_token_${result.findInfo.id}`,
+        access_token
+      );
+
       return {
         message: result.message,
         inLogin: result.isLogin,
         userInfo: result.findInfo,
-        access_token: await this.jwtService.signAsync(payload),
+        access_token,
       };
     }
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    console.log("Getting id", id);
-    return this.userService.findOne(+id);
+  async findOne(@Param("id") id: string) {
+    const isExitOnRedis = await this.cacheManager.get(`userId-${id}`);
+
+    if (isExitOnRedis) {
+      return isExitOnRedis;
+    } else {
+      const userInfo = await this.userService.findOne(+id);
+
+      await this.cacheManager.set(`userId-${id}`, userInfo);
+
+      return userInfo;
+    }
   }
 
   @Patch(":id")
