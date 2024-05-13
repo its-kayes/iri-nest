@@ -59,10 +59,18 @@ export class UserController {
       };
 
       const access_token = await this.jwtService.signAsync(payload);
+      const refresh_token = await this.jwtService.signAsync(payload, {
+        expiresIn: "10d",
+      });
 
       await this.cacheManager.set(
         `access_token_${result.findInfo.id}`,
         access_token
+      );
+
+      await this.cacheManager.set(
+        `refresh_token_${result.findInfo.id}`,
+        refresh_token
       );
 
       return {
