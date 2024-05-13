@@ -9,6 +9,12 @@ import {
   Query,
   Inject,
 } from "@nestjs/common";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from "@nestjs/swagger";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -17,6 +23,8 @@ import { JwtService } from "@nestjs/jwt";
 import { CACHE_MANAGER, CacheKey, CacheTTL } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
 
+@ApiBearerAuth()
+@ApiTags("user")
 @Controller("user")
 export class UserController {
   constructor(
@@ -25,12 +33,14 @@ export class UserController {
     @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
+  @ApiOperation({ summary: "Create User" })
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     const result = this.userService.create(createUserDto);
     return result;
   }
 
+  @ApiOperation({ summary: "Get All" })
   @CacheKey("get_all_user")
   @CacheTTL(5)
   @Get()
@@ -39,6 +49,7 @@ export class UserController {
     return result;
   }
 
+  @ApiOperation({ summary: "User Login" })
   @Get("login")
   async login(@Query() userInfo: LoginUserDto) {
     const result = await this.userService.login(userInfo);
@@ -76,6 +87,7 @@ export class UserController {
     }
   }
 
+  @ApiOperation({ summary: "Get Single User" })
   @Get(":id")
   async findOne(@Param("id") id: string) {
     const isExitOnRedis = await this.cacheManager.get(`userId-${id}`);
@@ -91,16 +103,19 @@ export class UserController {
     }
   }
 
+  @ApiOperation({ summary: "Update Single User" })
   @Patch(":id")
   updateOne(@Param("id") id: string, @Body() updateCityDto: UpdateUserDto) {
     return this.userService.updateOne(+id, updateCityDto);
   }
 
+  @ApiOperation({ summary: "Delete User" })
   @Delete(":id")
   remove(@Param("id") id: string) {
     return this.userService.remove(+id);
   }
 
+  @ApiOperation({ summary: "Get refresh token from cache (redis)" })
   @Get("refresh-token/:id")
   async refreshToken(@Param("id") id: string) {
     const token = await this.cacheManager.get(`refresh_token_${id}`);
