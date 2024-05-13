@@ -7,18 +7,29 @@ import {
   Patch,
   Delete,
   Query,
+  Inject,
+  UseInterceptors,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { JwtService } from "@nestjs/jwt";
+import {
+  CACHE_MANAGER,
+  CacheInterceptor,
+  CacheKey,
+  CacheTTL,
+} from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 
 @Controller("user")
+// @UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   @Post()
@@ -27,6 +38,8 @@ export class UserController {
     return result;
   }
 
+  @CacheKey("get_all_user")
+  @CacheTTL(5)
   @Get()
   async findAll() {
     const result = await this.userService.findAll();
