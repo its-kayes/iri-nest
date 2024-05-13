@@ -12,10 +12,14 @@ import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { LoginUserDto } from "./dto/login-user.dto";
+import { JwtService } from "@nestjs/jwt";
 
 @Controller("user")
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private jwtService: JwtService
+  ) {}
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
@@ -24,13 +28,31 @@ export class UserController {
   }
 
   @Get()
-  findAll() {
-    return this.userService.findAll();
+  async findAll() {
+    const result = await this.userService.findAll();
+    return result;
   }
 
-  @Get("login") // Matches GET requests to /user/login
-  login(@Query() userInfo: LoginUserDto) {
-    return this.userService.login(userInfo);
+  @Get("login")
+  async login(@Query() userInfo: LoginUserDto) {
+    const result = await this.userService.login(userInfo);
+
+    if (!result.isLogin) {
+      return result;
+    } else {
+      const payload = {
+        msg: result.message,
+        inLogin: result.isLogin,
+        userInfo: result.findInfo,
+      };
+
+      return {
+        message: result.message,
+        inLogin: result.isLogin,
+        userInfo: result.findInfo,
+        access_token: await this.jwtService.signAsync(payload),
+      };
+    }
   }
 
   @Get(":id")

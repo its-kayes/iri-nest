@@ -82,7 +82,16 @@ export class UserService {
       return { message: "Password not matched", isLogin: false };
     } else {
       true;
-      return { message: "Password  matched", isLogin: true };
+      return {
+        message: "Password  matched",
+        isLogin: true,
+        findInfo: {
+          userName: findInfo.userName,
+          email: findInfo.email,
+          country: findInfo.country,
+          profession: findInfo.profession,
+        },
+      };
     }
   }
 }
