@@ -20,7 +20,6 @@ import { redisStore } from "cache-manager-redis-store";
       // @ts-ignore
       store: async () =>
         await redisStore({
-          // Store-specific configuration:
           socket: {
             host: "localhost",
             port: 6379,

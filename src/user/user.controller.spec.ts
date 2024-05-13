@@ -7,6 +7,7 @@ import { User } from "./entities/user.entity";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { CacheModule } from "@nestjs/cache-manager";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { CreateUserDto } from "./dto/create-user.dto";
 
 describe("UserController", () => {
   let controller: UserController;
@@ -14,8 +15,8 @@ describe("UserController", () => {
 
   beforeEach(async () => {
     const jwtOptions: JwtModuleOptions = {
-      secret: "your-secret-key", // Replace with your JWT secret
-      signOptions: { expiresIn: "1h" }, // Example: token expiration time
+      secret: "b437f9acc3975496ec2324d92f8f58f0f8d8ea0c",
+      signOptions: { expiresIn: "1h" },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -31,7 +32,7 @@ describe("UserController", () => {
         JwtModule.registerAsync({
           useFactory: () => jwtOptions,
         }),
-        CacheModule.register(), // Include CacheModule if used in UserService
+        CacheModule.register(),
       ],
     }).compile();
 
@@ -39,25 +40,54 @@ describe("UserController", () => {
     service = module.get<UserService>(UserService);
   });
 
-  it("should be defined", () => {
+  it("is be defined", () => {
     expect(controller).toBeDefined();
   });
 
+  describe("create", () => {
+    it("is create a new user", async () => {
+      const createUserDto: CreateUserDto = {
+        userName: "user",
+        email: "user@example.com",
+        password: "password",
+        country: "USA",
+        profession: "Developer",
+      };
+
+      const createdUser: User = {
+        id: 1,
+        userName: "user",
+        email: "user@example.com",
+        password: "password",
+        country: "USA",
+        profession: "Developer",
+      };
+
+      jest.spyOn(service, "create").mockResolvedValue(createdUser);
+
+      const result = await controller.create(createUserDto);
+
+      expect(result).toEqual(createdUser);
+
+      expect(service.create).toHaveBeenCalledWith(createUserDto);
+    });
+  });
+
   describe("findAll", () => {
-    it("should return an array of users", async () => {
+    it("is return an array of users", async () => {
       const users = [
         {
           id: 1,
-          userName: "John",
-          email: "john@example.com",
+          userName: "Use",
+          email: "user@example.com",
           password: "password",
           country: "bd",
           profession: "dev",
         },
         {
           id: 2,
-          userName: "Alice",
-          email: "alice@example.com",
+          userName: "user2",
+          email: "user2@example.com",
           password: "password2",
           country: "bd2",
           profession: "dev2",
@@ -70,77 +100,65 @@ describe("UserController", () => {
   });
 
   describe("findOne", () => {
-    it("should return a user's info", async () => {
-      const userId = "1"; // Set the ID for the user you want to find
+    it("is return a user's info", async () => {
+      const userId = "1";
       const userInfo = {
         id: 1,
-        userName: "John",
-        email: "john@example.com",
+        userName: "user2",
+        email: "user2@example.com",
         country: "bd",
         profession: "dev",
       };
 
       jest.spyOn(service, "findOne").mockResolvedValue(userInfo);
 
-      // Call controller.findOne with the specified userId
       const result = await controller.findOne(userId);
 
-      // Verify that the returned result matches the expected user info
       expect(result).toEqual(userInfo);
     });
   });
 
   describe("updateOne", () => {
-    it("should update a user with given ID and data", async () => {
-      // Mock data
-      const userId = "1"; // ID of the user to update
+    it("is update a user with given ID and data", async () => {
+      const userId = "1";
       const updateData: UpdateUserDto = {
-        userName: "Updated Name",
-        email: "updated@example.com",
-        country: "updatedCountry",
-        profession: "updatedProfession",
+        userName: "user3",
+        email: "user2@example.com",
+        country: "ind",
+        profession: "team lead",
       };
 
-      // Mock the updateOne method of UserService
       const updatedUser = {
         id: 1,
-        userName: "Updated Name",
-        email: "updated@example.com",
-        country: "updatedCountry",
-        profession: "updatedProfession",
+        userName: "user3",
+        email: "user2@example.com",
+        country: "ind",
+        profession: "team lead",
       };
       jest.spyOn(service, "updateOne").mockResolvedValue(updatedUser);
 
-      // Call the updateOne method of UserController
       const result = await controller.updateOne(userId, updateData);
 
-      // Verify that the userService.updateOne method was called with the correct parameters
       expect(service.updateOne).toHaveBeenCalledWith(+userId, updateData);
 
-      // Verify that the returned result matches the updated user data
       expect(result).toEqual(updatedUser);
     });
   });
 
   describe("remove", () => {
-    it("should remove a user by ID", async () => {
-      // Mock data
-      const userId = "1"; // ID of the user to remove
+    it("is remove a user by ID", async () => {
+      const userId = "1";
 
-      // Mock the remove method of UserService
       const deleteResult: DeleteResult = {
         affected: 1,
         raw: undefined,
-      }; // Simulate successful deletion
+      };
       jest.spyOn(service, "remove").mockResolvedValue(deleteResult);
 
-      // Call the remove method of UserController
       const result = await controller.remove(userId);
 
-      // Verify that the userService.remove method was called with the correct ID
       expect(service.remove).toHaveBeenCalledWith(+userId);
 
-      // Verify that the result indicates successful deletion
       expect(result).toEqual(deleteResult);
     });
   });
