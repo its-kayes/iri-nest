@@ -7,18 +7,28 @@ import {
   Patch,
   Delete,
   Query,
+  Inject,
+  UseInterceptors,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { JwtService } from "@nestjs/jwt";
+import {
+  CACHE_MANAGER,
+  CacheInterceptor,
+  CacheKey,
+  CacheTTL,
+} from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 
 @Controller("user")
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   @Post()
@@ -27,6 +37,8 @@ export class UserController {
     return result;
   }
 
+  @CacheKey("get_all_user")
+  @CacheTTL(5)
   @Get()
   async findAll() {
     const result = await this.userService.findAll();
@@ -46,19 +58,43 @@ export class UserController {
         userInfo: result.findInfo,
       };
 
+      const access_token = await this.jwtService.signAsync(payload);
+      const refresh_token = await this.jwtService.signAsync(payload, {
+        expiresIn: "10d",
+      });
+
+      await this.cacheManager.set(
+        `access_token_${result.findInfo.id}`,
+        access_token
+      );
+
+      await this.cacheManager.set(
+        `refresh_token_${result.findInfo.id}`,
+        refresh_token
+      );
+
       return {
         message: result.message,
         inLogin: result.isLogin,
         userInfo: result.findInfo,
-        access_token: await this.jwtService.signAsync(payload),
+        access_token,
       };
     }
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    console.log("Getting id", id);
-    return this.userService.findOne(+id);
+  async findOne(@Param("id") id: string) {
+    const isExitOnRedis = await this.cacheManager.get(`userId-${id}`);
+
+    if (isExitOnRedis) {
+      return isExitOnRedis;
+    } else {
+      const userInfo = await this.userService.findOne(+id);
+
+      await this.cacheManager.set(`userId-${id}`, userInfo);
+
+      return userInfo;
+    }
   }
 
   @Patch(":id")
@@ -69,5 +105,11 @@ export class UserController {
   @Delete(":id")
   remove(@Param("id") id: string) {
     return this.userService.remove(+id);
+  }
+
+  @Get("refresh-token/:id")
+  async refreshToken(@Param("id") id: string) {
+    const token = await this.cacheManager.get(`refresh_token_${id}`);
+    return { refreshToken: token };
   }
 }

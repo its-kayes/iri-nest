@@ -5,6 +5,8 @@ import { UserService } from "./user.service";
 import { User } from "./entities/user.entity";
 import { JwtModule } from "@nestjs/jwt";
 import { jwtConstants } from "./user.constance";
+import { CacheModule } from "@nestjs/cache-manager";
+import { redisStore } from "cache-manager-redis-store";
 
 @Module({
   imports: [
@@ -12,10 +14,28 @@ import { jwtConstants } from "./user.constance";
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: "60s" },
+      signOptions: { expiresIn: "1d" },
+    }),
+    CacheModule.register({
+      // @ts-ignore
+      store: async () =>
+        await redisStore({
+          // Store-specific configuration:
+          socket: {
+            host: "localhost",
+            port: 6379,
+          },
+          ttl: 300,
+        }),
     }),
   ],
   controllers: [UserController],
-  providers: [UserService],
+  providers: [
+    UserService,
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: CacheInterceptor,
+    // },
+  ],
 })
 export class UserModule {}
